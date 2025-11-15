@@ -1,7 +1,18 @@
 #!/bin/bash
 set -e
 
+# ========================================================================
+# VERSION BUMP SCRIPT FOR SWIFT PACKAGES
+# ========================================================================
+# This script reads the git tag AFTER development has been rebased onto main.
+# Main branch is the source of commit truth, so the tag comes from main's
+# commit history.
+# ========================================================================
+
+echo "Reading version from git tags..."
+
 # Get the latest git tag (source of truth for versioning)
+# This is read AFTER the rebase, so we're reading from main's history
 LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
 
 if [ -z "$LATEST_TAG" ]; then
@@ -12,7 +23,7 @@ fi
 # Strip 'v' prefix if present (handles both v1.2.3 and 1.2.3)
 CURRENT_VERSION=$(echo "$LATEST_TAG" | sed 's/^v//')
 
-echo "Latest git tag: $LATEST_TAG"
+echo "Latest git tag (from main): $LATEST_TAG"
 echo "Current version: $CURRENT_VERSION"
 
 # Split version into components
