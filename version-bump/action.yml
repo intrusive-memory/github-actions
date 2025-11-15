@@ -163,6 +163,7 @@ runs:
     - name: Create pull request
       id: create-pr
       shell: bash
+      continue-on-error: true
       env:
         GH_TOKEN: ${{ inputs.github-token }}
       run: |
@@ -189,11 +190,25 @@ runs:
 
         🤖 Automated by GitHub Actions"
 
-        PR_URL=$(gh pr create \
+        echo "Attempting to create pull request..."
+
+        if PR_URL=$(gh pr create \
           --base ${{ inputs.main-branch }} \
           --head ${{ inputs.development-branch }} \
           --title "chore: Bump version to ${{ steps.bump.outputs.new-version }}" \
-          --body "$PR_BODY" || echo "")
-
-        echo "pr-url=$PR_URL" >> $GITHUB_OUTPUT
-        echo "Pull request created: $PR_URL"
+          --body "$PR_BODY" 2>&1); then
+          echo "pr-url=$PR_URL" >> $GITHUB_OUTPUT
+          echo "✓ Pull request created: $PR_URL"
+        else
+          echo "⚠️  Could not create pull request automatically"
+          echo "Error: $PR_URL"
+          echo ""
+          echo "This is likely due to GitHub Actions permissions."
+          echo "The version bump was successful - please create the PR manually:"
+          echo ""
+          echo "  Branch: ${{ inputs.development-branch }} → ${{ inputs.main-branch }}"
+          echo "  Title: chore: Bump version to ${{ steps.bump.outputs.new-version }}"
+          echo ""
+          echo "Or run: gh pr create --base ${{ inputs.main-branch }} --head ${{ inputs.development-branch }}"
+          echo "pr-url=" >> $GITHUB_OUTPUT
+        fi
