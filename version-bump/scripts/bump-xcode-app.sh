@@ -29,17 +29,10 @@ echo "Current version (from tag): $CURRENT_VERSION"
 # Detect version format: simple integer (9) vs semantic (9.0.0)
 if [[ "$CURRENT_VERSION" =~ ^[0-9]+$ ]]; then
   # Simple integer versioning (v9 → v10)
+  # Always increment by 1 for simple versioning
   echo "Detected simple integer versioning"
-  case "$BUMP_TYPE" in
-    major|minor|patch)
-      # For simple versioning, all bump types just increment by 1
-      NEW_VERSION="$((CURRENT_VERSION + 1))"
-      ;;
-    *)
-      echo "Error: Invalid bump type: $BUMP_TYPE"
-      exit 1
-      ;;
-  esac
+  NEW_VERSION="$((CURRENT_VERSION + 1))"
+  echo "Simple increment: $CURRENT_VERSION → $NEW_VERSION"
 else
   # Semantic versioning (v9.0.0 → v9.1.0)
   echo "Detected semantic versioning"
