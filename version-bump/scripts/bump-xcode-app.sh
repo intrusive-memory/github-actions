@@ -26,27 +26,45 @@ CURRENT_VERSION=$(echo "$LATEST_TAG" | sed 's/^v//')
 echo "Latest git tag (from main): $LATEST_TAG"
 echo "Current version (from tag): $CURRENT_VERSION"
 
-# Split version into components
-MAJOR=$(echo $CURRENT_VERSION | cut -d. -f1)
-MINOR=$(echo $CURRENT_VERSION | cut -d. -f2)
-PATCH=$(echo $CURRENT_VERSION | cut -d. -f3)
+# Detect version format: simple integer (9) vs semantic (9.0.0)
+if [[ "$CURRENT_VERSION" =~ ^[0-9]+$ ]]; then
+  # Simple integer versioning (v9 → v10)
+  echo "Detected simple integer versioning"
+  case "$BUMP_TYPE" in
+    major|minor|patch)
+      # For simple versioning, all bump types just increment by 1
+      NEW_VERSION="$((CURRENT_VERSION + 1))"
+      ;;
+    *)
+      echo "Error: Invalid bump type: $BUMP_TYPE"
+      exit 1
+      ;;
+  esac
+else
+  # Semantic versioning (v9.0.0 → v9.1.0)
+  echo "Detected semantic versioning"
+  # Split version into components
+  MAJOR=$(echo $CURRENT_VERSION | cut -d. -f1)
+  MINOR=$(echo $CURRENT_VERSION | cut -d. -f2)
+  PATCH=$(echo $CURRENT_VERSION | cut -d. -f3)
 
-# Calculate new version based on bump type
-case "$BUMP_TYPE" in
-  major)
-    NEW_VERSION="$((MAJOR + 1)).0.0"
-    ;;
-  minor)
-    NEW_VERSION="${MAJOR}.$((MINOR + 1)).0"
-    ;;
-  patch)
-    NEW_VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))"
-    ;;
-  *)
-    echo "Error: Invalid bump type: $BUMP_TYPE"
-    exit 1
-    ;;
-esac
+  # Calculate new version based on bump type
+  case "$BUMP_TYPE" in
+    major)
+      NEW_VERSION="$((MAJOR + 1)).0.0"
+      ;;
+    minor)
+      NEW_VERSION="${MAJOR}.$((MINOR + 1)).0"
+      ;;
+    patch)
+      NEW_VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))"
+      ;;
+    *)
+      echo "Error: Invalid bump type: $BUMP_TYPE"
+      exit 1
+      ;;
+  esac
+fi
 
 echo "New version: $NEW_VERSION"
 
