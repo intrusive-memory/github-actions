@@ -69,17 +69,18 @@ if [ -z "$PROJECT_FILE" ]; then
   exit 1
 fi
 
-# Navigate to project directory for agvtool
-ORIGINAL_DIR=$(pwd)
-PROJECT_DIR=$(dirname "$PROJECT_FILE")
-cd "$PROJECT_DIR"
+# Update MARKETING_VERSION in project.pbxproj (modern Xcode versioning)
+echo "Setting Xcode project MARKETING_VERSION to $NEW_VERSION"
+PROJECT_PBX="$PROJECT_FILE/project.pbxproj"
 
-# Update version using agvtool (sets to NEW version regardless of what's currently there)
-echo "Setting Xcode project version to $NEW_VERSION"
-agvtool new-marketing-version "$NEW_VERSION"
-
-# Return to original directory
-cd "$ORIGINAL_DIR"
+if [ -f "$PROJECT_PBX" ]; then
+  # Replace all MARKETING_VERSION values in the project file
+  # Use -i with empty string for BSD sed (macOS) compatibility
+  sed -i '' -E "s/(MARKETING_VERSION = )[0-9]+(\.[0-9]+)*;/\1${NEW_VERSION};/g" "$PROJECT_PBX"
+  echo "Updated MARKETING_VERSION in $PROJECT_PBX"
+else
+  echo "Warning: project.pbxproj not found at $PROJECT_PBX"
+fi
 
 # Update README.md if it exists - replace ANY existing version
 if [ -f "README.md" ]; then
